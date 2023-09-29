@@ -106,6 +106,9 @@ func checkPrivateKey() (*rsa.PrivateKey, error) {
 	}
 	pemString := strings.TrimSpace(privateKey)
 	block, _ := pem.Decode([]byte(pemString))
+	if block == nil {
+		return nil, fmt.Errorf("checkPrivateKey: unable to decode Private Key")
+	}
 	key, err := x509.ParsePKCS1PrivateKey(block.Bytes)
 	if err != nil {
 		return nil, fmt.Errorf("checkPrivateKey: %v", err)

@@ -2,7 +2,13 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: 'AWS::Serverless-2016-10-31'
 Description: An AWS Lambda application that creates a jwt for CyberArk Vendor PAM or CyberArk Secure Web Sessions.
 Resources:
-  function:
+  CybrTokenGateway:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: NE-ISPSS-TOKEN-GATEWAY
+      StageName: Staging
+
+  CyrbTokenFunction:
     Type: AWS::Serverless::Function
     Properties:
       Handler: main
@@ -19,8 +25,23 @@ Resources:
         HttpRequest:
           Type: Api
           Properties:
-            Path: 'readable'
-            Method: POST
-            Auth: 
+            RestApiId: !Ref CybrTokenGateway
+            Path: /token
+            Method: GET
+            Auth:
               ApiFunctionAuth:
                 ApiKeyRequired: false
+
+Outputs:
+  CybrTokenGateway:
+    Description: 'API Gateway endpoint URL for Staging stage for Cybr Token Function'
+    Value: !Sub 'https://${CybrTokenGateway}.execute-api.${AWS::Region}.amazonaws.com/Staging/token/'
+  CybrTokenGatewayRestApiId:
+    Description: 'API Gateway ARN for Basic AWS API Gateway'
+    Value: !Ref CybrTokenGateway
+    Export:
+      Name: CybrTokenGateway-RestApiId
+  CybrTokenGatewayRootResourceId:
+    Value: !GetAtt CybrTokenGateway.RootResourceId
+    Export:
+      Name: CybrTokenGateway-RootResourceId
