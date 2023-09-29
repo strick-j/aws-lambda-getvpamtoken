@@ -223,10 +223,10 @@ func TestCallLambda_ValidVariables(t *testing.T) {
 		region           string
 		key              string
 	}{
-		{"missing_tenant_id", "11ed307a252abc12345ab76ae4e1234a", "12ed305a257abc15645ab76ae4e1234a", "us", testKey},
-		{"missing_service_account_id", "11ed307a252abc12345ab76ae4e1234a", "12ed305a257abc15645ab76ae4e1234a", "Eu", testKey},
-		{"missing_region", "11ed307a252abc12345ab76ae4e1234a", "12ed305a257abc15645ab76ae4e1234a", "Canada", testKey},
-		{"missing_private_key", "11ed307a252abc12345ab76ae4e1234a", "12ed305a257abc15645ab76ae4e1234a", "us", testKey},
+		{"test_1", "11ed307a252abc12345ab76ae4e1234a", "12ed305a257abc15645ab76ae4e1234a", "us", testKey},
+		{"test_2", "11ed307a252abc12345ab76ae4e1234a", "12ed305a257abc15645ab76ae4e1234a", "Eu", testKey},
+		{"test_3", "11ed307a252abc12345ab76ae4e1234a", "12ed305a257abc15645ab76ae4e1234a", "Canada", testKey},
+		{"test_4", "11ed307a252abc12345ab76ae4e1234a", "12ed305a257abc15645ab76ae4e1234a", "us", testKey},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

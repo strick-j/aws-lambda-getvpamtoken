@@ -76,7 +76,7 @@ func checkServiceAccount() (*string, error) {
 func checkRegion() (*string, error) {
 	region := os.Getenv("CYBR_REGION")
 	if len(region) == 0 {
-		err := fmt.Errorf("checkTenant: no region set in environment variables")
+		err := fmt.Errorf("checkRegion: no region set in environment variables")
 		return nil, err
 	}
 	audurl := map[string]string{
@@ -91,7 +91,7 @@ func checkRegion() (*string, error) {
 	var u interface{} = audurl
 	audience := u.(map[string]string)[strings.ToLower(region)]
 	if len(audience) == 0 {
-		err := fmt.Errorf("checkTenant: Invalid region provided: %v. Valid regions are: US, EU, Canada, Austraila, London, India, and Singapore", region)
+		err := fmt.Errorf("checkRegion: Invalid region provided: %v. Valid regions are: US, EU, Canada, Austraila, London, India, and Singapore", region)
 		return nil, err
 	}
 	return &audience, nil
@@ -127,12 +127,12 @@ func callLambda() (*string, error) {
 	// Validate Region
 	audience, err := checkRegion()
 	if err != nil {
-		return nil, fmt.Errorf("callLambda: %v", err)
+		return nil, err
 	}
 	// Validate Private Key
 	key, err := checkPrivateKey()
 	if err != nil {
-		return nil, fmt.Errorf("callLambda: %v", err)
+		return nil, err
 	}
 	str := []string{*tenantid, *serviceaccountid, "ExternalServiceAccount"}
 	s := strings.Join(str, ".")
