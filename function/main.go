@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/rsa"
 	"crypto/x509"
-	"encoding/json"
 	"encoding/pem"
 	"fmt"
 	"log"
@@ -155,10 +154,9 @@ func callLambda() (*string, error) {
 	return &tokenString, nil
 }
 
-func handleRequest(ctx context.Context, event events.SQSEvent) (string, error) {
+func handleRequest(ctx context.Context, event events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	// event
-	eventJson, _ := json.MarshalIndent(event, "", "  ")
-	log.Printf("EVENT: %s", eventJson)
+	var ApiResponse events.APIGatewayProxyResponse
 	// environment variables
 	log.Printf("REGION: %s", os.Getenv("AWS_REGION"))
 	log.Println("ALL ENV VARS:")
@@ -177,9 +175,11 @@ func handleRequest(ctx context.Context, event events.SQSEvent) (string, error) {
 	// AWS SDK call
 	usage, err := callLambda()
 	if err != nil {
-		return "ERROR", err
+		ApiResponse = events.APIGatewayProxyResponse{Body: "Error generating Access Token", StatusCode: 404}
+		return ApiResponse, err
 	}
-	return *usage, nil
+	ApiResponse = events.APIGatewayProxyResponse{Body: *usage, StatusCode: 200}
+	return ApiResponse, nil
 }
 
 func main() {

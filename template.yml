@@ -1,0 +1,26 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: An AWS Lambda application that creates a jwt for CyberArk Vendor PAM or CyberArk Secure Web Sessions.
+Resources:
+  function:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: main
+      Runtime: go1.x
+      CodeUri: function/.
+      Description: Creates a jwt for CyberArk Vendor PAM or CyberArk Secure Web Sessions
+      Timeout: 5
+      # Function's execution role
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - AWSLambda_ReadOnlyAccess
+      Tracing: Active
+      Events:
+        HttpRequest:
+          Type: Api
+          Properties:
+            Path: 'readable'
+            Method: POST
+            Auth: 
+              ApiFunctionAuth:
+                ApiKeyRequired: false

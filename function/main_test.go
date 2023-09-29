@@ -250,7 +250,7 @@ func TestMain_ValidVariables(t *testing.T) {
 		AwsRequestID:       "495b12a8-xmpl-4eca-8168-160484189f99",
 		InvokedFunctionArn: "arn:aws:lambda:us-east-2:123456789012:function:aws-lambda-getvpamtoken-go",
 	})
-	var event events.SQSEvent
+	var event events.APIGatewayProxyRequest
 	// Set environment variables
 	os.Setenv("CYBR_TENANT_ID", "11ed307a252abc12345ab76ae4e1234a")
 	os.Setenv("CYBR_SERVICE_ACCOUNT_ID", "12ed305a257abc15645ab76ae4e1234a")
