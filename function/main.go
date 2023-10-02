@@ -5,6 +5,7 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/base64"
+	"encoding/json"
 	"encoding/pem"
 	"fmt"
 	"log"
@@ -107,6 +108,7 @@ func checkRegion() (*string, error) {
 
 // Checks Private Kay and validates it is the correct type
 func checkPrivateKey() (*rsa.PrivateKey, error) {
+	var secretStruct secretsmanager.GetSecretValueOutput
 	// Get private key from Secrets Manager
 	privateKeyb64, err := smclient.GetSecretValue(&secretsmanager.GetSecretValueInput{
 		SecretId: aws.String(os.Getenv("CYBR_KEY")),
@@ -114,10 +116,13 @@ func checkPrivateKey() (*rsa.PrivateKey, error) {
 	if err != nil {
 		return nil, fmt.Errorf("checkPrivateKey: %v", err)
 	}
+
 	// Convert private key to string
-	var privateKeyStr string = *privateKeyb64.SecretString
+	//var privateKeyStr string = *privateKeyb64.SecretString
+	json.Unmarshal([]byte(*privateKeyb64.SecretString), &secretStruct)
+
 	// Decode private key
-	privateKey, err := base64.StdEncoding.DecodeString(privateKeyStr)
+	privateKey, err := base64.StdEncoding.DecodeString(*secretStruct.SecretString)
 	if err != nil {
 		return nil, fmt.Errorf("checkPrivateKey: %v", err)
 	}
