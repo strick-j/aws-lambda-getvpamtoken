@@ -56,8 +56,6 @@ Resources:
             RestApiId: !Ref CybrTokenGateway
             Path: /token
             Method: GET
-            Auth:
-              ApiKeyRequired: false
 
 Outputs:
   CybrTokenGateway:
