@@ -119,7 +119,10 @@ func checkPrivateKey() (*rsa.PrivateKey, error) {
 
 	// Convert private key to string
 	//var privateKeyStr string = *privateKeyb64.SecretString
-	json.Unmarshal([]byte(*privateKeyb64.SecretString), &secretStruct)
+	err = json.Unmarshal([]byte(*privateKeyb64.SecretString), &secretStruct)
+	if err != nil {
+		return nil, fmt.Errorf("checkPrivateKey: %v", err)
+	}
 
 	// Decode private key
 	privateKey, err := base64.StdEncoding.DecodeString(*secretStruct.SecretString)
