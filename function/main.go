@@ -31,11 +31,6 @@ func init() {
 	rand.New(rand.NewSource(time.Now().UnixNano()))
 }
 
-var mySession = session.Must(session.NewSession())
-
-// var lclient = lambda.New(mySession)
-var smclient = secretsmanager.New(mySession)
-
 // Generates a random sequency of numbers to utlize
 // for the 'jti' portion of the jwt
 func randSeq(n int) string {
@@ -108,24 +103,38 @@ func checkRegion() (*string, error) {
 
 // Checks Private Kay and validates it is the correct type
 func checkPrivateKey() (*rsa.PrivateKey, error) {
-	var secretStruct secretsmanager.GetSecretValueOutput
+	// Create struct to hold private key
+	var secretData struct {
+		Address    string `json:"address"`
+		Username   string `json:"username"`
+		Platformid string `json:"platformid"`
+		Password   string `json:"password"`
+		Comment    string `json:"comment"`
+	}
+	// Create Secrets Manager client
+	svc := secretsmanager.New(
+		session.Must(session.NewSession()),
+		aws.NewConfig().WithRegion(os.Getenv("AWS_REGION")),
+	)
 	// Get private key from Secrets Manager
-	privateKeyb64, err := smclient.GetSecretValue(&secretsmanager.GetSecretValueInput{
-		SecretId: aws.String(os.Getenv("CYBR_KEY")),
+	result, err := svc.GetSecretValue(&secretsmanager.GetSecretValueInput{
+		SecretId:     aws.String(os.Getenv("CYBR_KEY")),
+		VersionStage: aws.String("AWSCURRENT"),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("checkPrivateKey: %v", err)
 	}
-
+	var secretString string
+	if result != nil {
+		secretString = *result.SecretString
+	}
 	// Convert private key to string
-	//var privateKeyStr string = *privateKeyb64.SecretString
-	err = json.Unmarshal([]byte(*privateKeyb64.SecretString), &secretStruct)
+	err = json.Unmarshal([]byte(secretString), &secretData)
 	if err != nil {
 		return nil, fmt.Errorf("checkPrivateKey: %v", err)
 	}
-
 	// Decode private key
-	privateKey, err := base64.StdEncoding.DecodeString(*secretStruct.SecretString)
+	privateKey, err := base64.StdEncoding.DecodeString(secretData.Password)
 	if err != nil {
 		return nil, fmt.Errorf("checkPrivateKey: %v", err)
 	}
@@ -135,7 +144,6 @@ func checkPrivateKey() (*rsa.PrivateKey, error) {
 		return nil, err
 	}
 	// Make sure private key is PEM encoded
-	//pemString := strings.TrimSpace(stringprivateKey)
 	block, _ := pem.Decode(privateKey)
 	if block == nil {
 		return nil, fmt.Errorf("checkPrivateKey: unable to decode Private Key")

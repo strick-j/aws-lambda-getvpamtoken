@@ -9,15 +9,15 @@ Parameters:
   CybrTenantId:
     Type: String
     Description: The tenant id of the CyberArk Remote Access Service
-    Default: 1
+    Default: 1a
   CybrServiceAccountId:
     Type: String
     Description: The service account id of the CyberArk Remote Access Service
-    Default: 1
+    Default: 1a
   CybrKey:
     Type: String
     Description: The ARN of the secret containing the CyberArk Remote Access Service key
-    Default: 1
+    Default: 1a
 
 Resources:
   CybrTokenGateway:
@@ -71,6 +71,3 @@ Outputs:
     Value: !GetAtt CybrTokenGateway.RootResourceId
     Export:
       Name: CybrTokenGateway-RootResourceId
-  CybrTokenFunction:
-    Description: 'API Gateway ARN for Basic AWS API Gateway'
-    Value: !Ref CybrTokenFunction.RootResourceId
