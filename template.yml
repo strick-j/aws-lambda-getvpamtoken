@@ -26,7 +26,7 @@ Resources:
       Name: NE-ISPSS-TOKEN-GATEWAY
       StageName: Staging
 
-  CyrbTokenFunction:
+  CybrTokenFunction:
     Type: AWS::Serverless::Function
     Properties:
       Handler: main
@@ -71,3 +71,6 @@ Outputs:
     Value: !GetAtt CybrTokenGateway.RootResourceId
     Export:
       Name: CybrTokenGateway-RootResourceId
+  CybrTokenFunction:
+    Description: 'API Gateway ARN for Basic AWS API Gateway'
+    Value: !Ref CybrTokenFunction.RootResourceId
