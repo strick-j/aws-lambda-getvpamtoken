@@ -25,7 +25,10 @@ import (
 	"github.com/golang-jwt/jwt"
 )
 
-var client = lambda.New(session.New())
+var client = lambda.New(
+	session.Must(session.NewSession()),
+	aws.NewConfig().WithRegion(os.Getenv("AWS_REGION")),
+)
 
 func init() {
 	rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -199,7 +202,6 @@ func callLambda() (*string, error) {
 }
 
 func handleRequest(ctx context.Context, event events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	// event
 	var ApiResponse events.APIGatewayProxyResponse
 	// environment variables
 	log.Printf("REGION: %s", os.Getenv("AWS_REGION"))

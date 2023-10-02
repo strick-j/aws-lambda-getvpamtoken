@@ -5,7 +5,7 @@ Parameters:
   CybrRegion:
     Type: String
     Description: The region where the CyberArk Remote Access Serivce is hosted
-    Default: us
+    Default: Placeholder
   CybrTenantId:
     Type: String
     Description: The tenant id of the CyberArk Remote Access Service
@@ -41,7 +41,7 @@ Resources:
         - AWSLambdaBasicExecutionRole
         - AWSLambda_ReadOnlyAccess
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:PIN-SEC-HUB-DEV/VPAM-B64-KEY-1P8Whs"
+            SecretArn: !Ref CybrKey
       Tracing: Active
       Environment:
         Variables:
@@ -59,10 +59,10 @@ Resources:
 
 Outputs:
   CybrTokenGateway:
-    Description: 'API Gateway endpoint URL for Staging stage for Cybr Token Function'
-    Value: !Sub 'https://${CybrTokenGateway}.execute-api.${AWS::Region}.amazonaws.com/Staging/token/'
+    Description: API Gateway endpoint URL for Staging stage for Cybr Token Function
+    Value: !Sub "https://${CybrTokenGateway}.execute-api.${AWS::Region}.amazonaws.com/Staging/token/"
   CybrTokenGatewayRestApiId:
-    Description: 'API Gateway ARN for Basic AWS API Gateway'
+    Description: API Gateway ARN for Basic AWS API Gateway
     Value: !Ref CybrTokenGateway
     Export:
       Name: CybrTokenGateway-RestApiId

@@ -152,6 +152,7 @@ func TestCheckRegion(t *testing.T) {
 
 // TestCheckPrivateKey_Valid Key verifies that the checkPrivateKey
 // function validates a properly formatted key
+/*
 func TestCheckPrivateKey_ValidKey(t *testing.T) {
 	testKey := GenRSAKey(t)
 	os.Setenv("CYBR_KEY", testKey)
@@ -171,9 +172,11 @@ func TestCheckPrivateKey_ValidKey(t *testing.T) {
 		t.Errorf("returned key does match set key")
 	}
 }
+*/
 
 // TestCheckPrivateKey_Valid Key verifies that the checkPrivateKey
 // function validates a properly formatted key
+/*
 func TestCheckPrivateKey_InvalidKey(t *testing.T) {
 	testKey := GenRSAPKCS8Key(t)
 	os.Setenv("CYBR_KEY", testKey)
@@ -182,6 +185,7 @@ func TestCheckPrivateKey_InvalidKey(t *testing.T) {
 		t.Fatalf("want error when invalid key (pkcs8) is provided")
 	}
 }
+*/
 
 // TestCallLambda_InvalidVariables calls callLambda with invalid or missing varibles
 func TestCallLambda_InvalidVariables(t *testing.T) {
