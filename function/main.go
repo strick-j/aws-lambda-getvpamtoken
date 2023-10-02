@@ -143,10 +143,11 @@ func checkPrivateKey() (*rsa.PrivateKey, error) {
 		err := fmt.Errorf("checkPrivateKey: no Private Key set in environment variables")
 		return nil, err
 	}
+	pemString := strings.TrimSpace(string(privateKey))
 	// Make sure private key is PEM encoded
-	block, _ := pem.Decode(privateKey)
+	block, _ := pem.Decode([]byte(pemString))
 	if block == nil {
-		return nil, fmt.Errorf("checkPrivateKey: unable to decode Private Key, Private Key: %v", privateKey)
+		return nil, fmt.Errorf("checkPrivateKey: unable to decode Private Key, Private Key: %v", pemString)
 	}
 	// Make sure private key is RSA
 	key, err := x509.ParsePKCS1PrivateKey(block.Bytes)
