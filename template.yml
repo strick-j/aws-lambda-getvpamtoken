@@ -9,15 +9,15 @@ Parameters:
   CybrTenantId:
     Type: String
     Description: The tenant id of the CyberArk Remote Access Service
-    Default: 1a
+    Default: Placeholder
   CybrServiceAccountId:
     Type: String
     Description: The service account id of the CyberArk Remote Access Service
-    Default: 1a
+    Default: Placeholder
   CybrKey:
     Type: String
     Description: The ARN of the secret containing the CyberArk Remote Access Service key
-    Default: 1a
+    Default: Placeholder
 
 Resources:
   CybrTokenGateway:
@@ -25,6 +25,8 @@ Resources:
     Properties:
       Name: NE-ISPSS-TOKEN-GATEWAY
       StageName: Staging
+      Auth:
+        ApiKeyRequired: false
 
   CybrTokenFunction:
     Type: AWS::Serverless::Function
@@ -55,8 +57,7 @@ Resources:
             Path: /token
             Method: GET
             Auth:
-              ApiFunctionAuth:
-                ApiKeyRequired: false
+              ApiKeyRequired: false
 
 Outputs:
   CybrTokenGateway:
