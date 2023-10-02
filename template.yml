@@ -2,19 +2,19 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: 'AWS::Serverless-2016-10-31'
 Description: An AWS Lambda application that creates a jwt for CyberArk Vendor PAM or CyberArk Secure Web Sessions.
 Parameters:
-  CYBR_REGION:
+  CybrRegion:
     Type: String
     Description: The region where the CyberArk Remote Access Serivce is hosted
     Default: us
-  CYBR_TENANT_ID:
+  CybrTenantId:
     Type: String
     Description: The tenant id of the CyberArk Remote Access Service
     Default: 1
-  CYBR_SERVICE_ACCOUNT_ID:
+  CybrServiceAccountId:
     Type: String
     Description: The service account id of the CyberArk Remote Access Service
     Default: 1
-  CYBR_KEY:
+  CybrKey:
     Type: String
     Description: The ARN of the secret containing the CyberArk Remote Access Service key
     Default: 1
@@ -41,11 +41,12 @@ Resources:
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:PIN-SEC-HUB-DEV/VPAM-B64-KEY-1P8Whs"
       Tracing: Active
-      Variables:
-        CYBR_REGION:
-        CYBR_TENANT_ID:
-        CYBR_SERVICE_ACCOUNT_ID:
-        CYBR_KEY:
+      Environment:
+        Variables:
+          CYBR_REGION: !Ref CybrRegion
+          CYBR_TENANT_ID: !Ref CybrTenantId
+          CYBR_SERVICE_ACCOUNT_ID: !Ref CybrServiceAccountId
+          CYBR_KEY: !Ref CybrKey
       Events:
         HttpRequest:
           Type: Api
