@@ -1,7 +1,7 @@
 package main
 
 import (
-	//"context"
+	"context"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
@@ -9,8 +9,10 @@ import (
 	"os"
 	"regexp"
 	"testing"
-	//"github.com/aws/aws-lambda-go/events"
-	//"github.com/aws/aws-lambda-go/lambdacontext"
+	"time"
+
+	"github.com/aws/aws-lambda-go/events"
+	"github.com/aws/aws-lambda-go/lambdacontext"
 )
 
 // TestRandSequence calls randSequence with a value of 20
@@ -170,11 +172,10 @@ func TestCheckPrivateKey_ValidKey(t *testing.T) {
 		t.Errorf("returned key does match set key")
 	}
 }
-*/
+
 
 // TestCheckPrivateKey_Valid Key verifies that the checkPrivateKey
 // function validates a properly formatted key
-/*
 func TestCheckPrivateKey_InvalidKey(t *testing.T) {
 	testKey := GenRSAPKCS8Key(t)
 	os.Setenv("CYBR_KEY", testKey)
@@ -183,29 +184,31 @@ func TestCheckPrivateKey_InvalidKey(t *testing.T) {
 		t.Fatalf("want error when invalid key (pkcs8) is provided")
 	}
 }
-
+*/
 
 // TestCallLambda_InvalidVariables calls callLambda with invalid or missing varibles
 func TestCallLambda_InvalidVariables(t *testing.T) {
-	testKey := GenRSAKey(t)
+	// Mock the getKey function to return a valid RSA Key
+	getKey = func() (*rsa.PrivateKey, error) {
+		key, _ := rsa.GenerateKey(rand.Reader, 2048)
+		return key, nil
+	}
+	// Declare test variables
 	var tests = []struct {
 		name             string
 		tenantId         string
 		serviceAccountId string
 		region           string
-		key              string
 	}{
-		{"missing_tenant_id", "", "12ed305a257abc15645ab76ae4e1234a", "us", testKey},
-		{"missing_service_account_id", "11ed307a252abc12345ab76ae4e1234a", "", "us", testKey},
-		{"missing_region", "11ed307a252abc12345ab76ae4e1234a", "12ed305a257abc15645ab76ae4e1234a", "", testKey},
-		{"missing_private_key", "11ed307a252abc12345ab76ae4e1234a", "12ed305a257abc15645ab76ae4e1234a", "us", ""},
+		{"missing_tenant_id", "", "12ed305a257abc15645ab76ae4e1234a", "us"},
+		{"missing_service_account_id", "11ed307a252abc12345ab76ae4e1234a", "", "us"},
+		{"missing_region", "11ed307a252abc12345ab76ae4e1234a", "12ed305a257abc15645ab76ae4e1234a", ""},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			os.Setenv("CYBR_TENANT_ID", tt.tenantId)
 			os.Setenv("CYBR_SERVICE_ACCOUNT_ID", tt.serviceAccountId)
 			os.Setenv("CYBR_REGION", tt.region)
-			os.Setenv("CYBR_KEY", tt.key)
 			result, err := callLambda()
 			if err == nil {
 				t.Errorf("want error when variable is missing, %v", tt.name)
@@ -217,25 +220,29 @@ func TestCallLambda_InvalidVariables(t *testing.T) {
 
 // TestCallLambda_ValidVariables calls callLambda with valid varibles
 func TestCallLambda_ValidVariables(t *testing.T) {
-	testKey := GenRSAKey(t)
+	// Mock the getKey function to return a valid RSA Key
+	getKey = func() (*rsa.PrivateKey, error) {
+		key, _ := rsa.GenerateKey(rand.Reader, 2048)
+		return key, nil
+	}
+	// Declare test variables
 	var tests = []struct {
 		name             string
 		tenantId         string
 		serviceAccountId string
 		region           string
-		key              string
 	}{
-		{"test_1", "11ed307a252abc12345ab76ae4e1234a", "12ed305a257abc15645ab76ae4e1234a", "us", testKey},
-		{"test_2", "11ed307a252abc12345ab76ae4e1234a", "12ed305a257abc15645ab76ae4e1234a", "Eu", testKey},
-		{"test_3", "11ed307a252abc12345ab76ae4e1234a", "12ed305a257abc15645ab76ae4e1234a", "Canada", testKey},
-		{"test_4", "11ed307a252abc12345ab76ae4e1234a", "12ed305a257abc15645ab76ae4e1234a", "us", testKey},
+		{"test_1", "11ed307a252abc12345ab76ae4e1234a", "12ed305a257abc15645ab76ae4e1234a", "us"},
+		{"test_2", "11ed307a252abc12345ab76ae4e1234a", "12ed305a257abc15645ab76ae4e1234a", "Eu"},
+		{"test_3", "11ed307a252abc12345ab76ae4e1234a", "12ed305a257abc15645ab76ae4e1234a", "Canada"},
+		{"test_4", "11ed307a252abc12345ab76ae4e1234a", "12ed305a257abc15645ab76ae4e1234a", "us"},
 	}
+	// Loop through tests
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			os.Setenv("CYBR_TENANT_ID", tt.tenantId)
 			os.Setenv("CYBR_SERVICE_ACCOUNT_ID", tt.serviceAccountId)
 			os.Setenv("CYBR_REGION", tt.region)
-			os.Setenv("CYBR_KEY", tt.key)
 			result, err := callLambda()
 			if err != nil {
 				t.Errorf("error calling lambda, details: %v", err)
@@ -245,6 +252,11 @@ func TestCallLambda_ValidVariables(t *testing.T) {
 	}
 }
 func TestMain_ValidVariables(t *testing.T) {
+	// Mock the getKey function to return a valid RSA Key
+	getKey = func() (*rsa.PrivateKey, error) {
+		key, _ := rsa.GenerateKey(rand.Reader, 2048)
+		return key, nil
+	}
 	d := time.Now().Add(50 * time.Millisecond)
 	os.Setenv("AWS_LAMBDA_FUNCTION_NAME", "aws-lambda-getvpamtoken-go")
 	ctx, _ := context.WithDeadline(context.Background(), d)
@@ -257,21 +269,6 @@ func TestMain_ValidVariables(t *testing.T) {
 	os.Setenv("CYBR_TENANT_ID", "11ed307a252abc12345ab76ae4e1234a")
 	os.Setenv("CYBR_SERVICE_ACCOUNT_ID", "12ed305a257abc15645ab76ae4e1234a")
 	os.Setenv("CYBR_REGION", "us")
-	bitSize := 2048
-	// Generate RSA key.
-	key, err := rsa.GenerateKey(rand.Reader, bitSize)
-	if err != nil {
-		t.Fatalf("error generating Private Key for test, details: %v", err)
-	}
-	// Encode private key to PKCS#1 ASN.1 PEM.
-	keyPEM := pem.EncodeToMemory(
-		&pem.Block{
-			Type:    "RSA PRIVATE KEY",
-			Headers: map[string]string{},
-			Bytes:   x509.MarshalPKCS1PrivateKey(key),
-		},
-	)
-	os.Setenv("CYBR_KEY", string(keyPEM))
 	// inputEvent
 	result, err := handleRequest(ctx, event)
 	if err != nil {
@@ -279,7 +276,6 @@ func TestMain_ValidVariables(t *testing.T) {
 	}
 	t.Log(result)
 }
-*/
 
 // Helper function to generate RSA Key for test purposes
 func GenRSAKey(t *testing.T) string {

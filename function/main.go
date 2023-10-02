@@ -30,6 +30,8 @@ var (
 	err  error
 )
 
+var getKey = checkPrivateKey
+
 type Config struct {
 	SecretsManager secretsmanageriface.SecretsManagerAPI
 }
@@ -134,12 +136,6 @@ func checkPrivateKey() (*rsa.PrivateKey, error) {
 		Password   string `json:"password"`
 		Comment    string `json:"comment"`
 	}
-
-	// Create Secrets Manager client
-	//svc := secretsmanager.New(
-	//	session.Must(session.NewSession()),
-	//	aws.NewConfig().WithRegion(os.Getenv("AWS_REGION")),
-	//)
 	// Get private key from Secrets Manager
 	result, err := conf.SecretsManager.GetSecretValue(&secretsmanager.GetSecretValueInput{
 		SecretId:     aws.String(os.Getenv("CYBR_KEY")),
@@ -198,7 +194,7 @@ func callLambda() (*string, error) {
 		return nil, err
 	}
 	// Validate Private Key
-	key, err := checkPrivateKey()
+	key, err := getKey()
 	if err != nil {
 		return nil, err
 	}
