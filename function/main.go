@@ -114,8 +114,10 @@ func checkPrivateKey() (*rsa.PrivateKey, error) {
 	if err != nil {
 		return nil, fmt.Errorf("checkPrivateKey: %v", err)
 	}
+	// Convert private key to string
+	var privateKeyStr string = *privateKeyb64.SecretString
 	// Decode private key
-	privateKey, err := base64.StdEncoding.DecodeString(*privateKeyb64.SecretString)
+	privateKey, err := base64.StdEncoding.DecodeString(privateKeyStr)
 	if err != nil {
 		return nil, fmt.Errorf("checkPrivateKey: %v", err)
 	}
