@@ -146,7 +146,7 @@ func checkPrivateKey() (*rsa.PrivateKey, error) {
 	// Make sure private key is PEM encoded
 	block, _ := pem.Decode(privateKey)
 	if block == nil {
-		return nil, fmt.Errorf("checkPrivateKey: unable to decode Private Key")
+		return nil, fmt.Errorf("checkPrivateKey: unable to decode Private Key, Private Key: %v", privateKey)
 	}
 	// Make sure private key is RSA
 	key, err := x509.ParsePKCS1PrivateKey(block.Bytes)
