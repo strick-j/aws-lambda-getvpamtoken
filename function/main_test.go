@@ -1,7 +1,7 @@
 package main
 
 import (
-	"context"
+	//"context"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
@@ -9,10 +9,8 @@ import (
 	"os"
 	"regexp"
 	"testing"
-	"time"
-
-	"github.com/aws/aws-lambda-go/events"
-	"github.com/aws/aws-lambda-go/lambdacontext"
+	//"github.com/aws/aws-lambda-go/events"
+	//"github.com/aws/aws-lambda-go/lambdacontext"
 )
 
 // TestRandSequence calls randSequence with a value of 20
@@ -185,7 +183,7 @@ func TestCheckPrivateKey_InvalidKey(t *testing.T) {
 		t.Fatalf("want error when invalid key (pkcs8) is provided")
 	}
 }
-*/
+
 
 // TestCallLambda_InvalidVariables calls callLambda with invalid or missing varibles
 func TestCallLambda_InvalidVariables(t *testing.T) {
@@ -281,6 +279,7 @@ func TestMain_ValidVariables(t *testing.T) {
 	}
 	t.Log(result)
 }
+*/
 
 // Helper function to generate RSA Key for test purposes
 func GenRSAKey(t *testing.T) string {

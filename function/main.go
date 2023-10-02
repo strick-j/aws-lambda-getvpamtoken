@@ -20,17 +20,37 @@ import (
 	"github.com/aws/aws-lambda-go/lambdacontext"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
+	"github.com/aws/aws-sdk-go/service/secretsmanager/secretsmanageriface"
 	"github.com/golang-jwt/jwt"
 )
 
-var client = lambda.New(
-	session.Must(session.NewSession()),
-	aws.NewConfig().WithRegion(os.Getenv("AWS_REGION")),
+var (
+	conf *Config
+	err  error
 )
 
+type Config struct {
+	SecretsManager secretsmanageriface.SecretsManagerAPI
+}
+
+func InitializeConfig() (*Config, error) {
+	sess, err := session.NewSession(&aws.Config{
+		Region: aws.String(os.Getenv("AWS_REGION"))},
+	)
+	if err != nil {
+		return &Config{}, fmt.Errorf("unable to create session to aws: %v", err)
+	}
+	return &Config{
+		SecretsManager: secretsmanager.New(sess),
+	}, nil
+}
+
 func init() {
+	conf, err = InitializeConfig()
+	if err != nil {
+		log.Fatalf("Unable to initialize config: %v", err)
+	}
 	rand.New(rand.NewSource(time.Now().UnixNano()))
 }
 
@@ -114,13 +134,14 @@ func checkPrivateKey() (*rsa.PrivateKey, error) {
 		Password   string `json:"password"`
 		Comment    string `json:"comment"`
 	}
+
 	// Create Secrets Manager client
-	svc := secretsmanager.New(
-		session.Must(session.NewSession()),
-		aws.NewConfig().WithRegion(os.Getenv("AWS_REGION")),
-	)
+	//svc := secretsmanager.New(
+	//	session.Must(session.NewSession()),
+	//	aws.NewConfig().WithRegion(os.Getenv("AWS_REGION")),
+	//)
 	// Get private key from Secrets Manager
-	result, err := svc.GetSecretValue(&secretsmanager.GetSecretValueInput{
+	result, err := conf.SecretsManager.GetSecretValue(&secretsmanager.GetSecretValueInput{
 		SecretId:     aws.String(os.Getenv("CYBR_KEY")),
 		VersionStage: aws.String("AWSCURRENT"),
 	})
