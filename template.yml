@@ -20,6 +20,8 @@ Resources:
       Policies:
         - AWSLambdaBasicExecutionRole
         - AWSLambda_ReadOnlyAccess
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Sub "arn:aws:secetsmanager:${AWS::Region}:${AWS::AccountId}:secret:PIN-SEC-HUB-DEV/VPAM-B64-KEY-1P8Whs"
       Tracing: Active
       Events:
         HttpRequest:

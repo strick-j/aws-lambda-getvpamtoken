@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rsa"
 	"crypto/x509"
+	"encoding/base64"
 	"encoding/pem"
 	"fmt"
 	"log"
@@ -16,8 +17,10 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	runtime "github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-lambda-go/lambdacontext"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/lambda"
+	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/golang-jwt/jwt"
 )
 
@@ -26,6 +29,11 @@ var client = lambda.New(session.New())
 func init() {
 	rand.New(rand.NewSource(time.Now().UnixNano()))
 }
+
+var mySession = session.Must(session.NewSession())
+
+// var lclient = lambda.New(mySession)
+var smclient = secretsmanager.New(mySession)
 
 // Generates a random sequency of numbers to utlize
 // for the 'jti' portion of the jwt
@@ -99,16 +107,30 @@ func checkRegion() (*string, error) {
 
 // Checks Private Kay and validates it is the correct type
 func checkPrivateKey() (*rsa.PrivateKey, error) {
-	privateKey := os.Getenv("CYBR_KEY")
+	// Get private key from Secrets Manager
+	privateKeyb64, err := smclient.GetSecretValue(&secretsmanager.GetSecretValueInput{
+		SecretId: aws.String(os.Getenv("CYBR_KEY")),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("checkPrivateKey: %v", err)
+	}
+	// Decode private key
+	privateKey, err := base64.StdEncoding.DecodeString(*privateKeyb64.SecretString)
+	if err != nil {
+		return nil, fmt.Errorf("checkPrivateKey: %v", err)
+	}
+	// Make sure private key is not empty
 	if len(privateKey) == 0 {
-		err := fmt.Errorf("checkPrivateKey: no region set in environment variables")
+		err := fmt.Errorf("checkPrivateKey: no Private Key set in environment variables")
 		return nil, err
 	}
-	pemString := strings.TrimSpace(privateKey)
-	block, _ := pem.Decode([]byte(pemString))
+	// Make sure private key is PEM encoded
+	//pemString := strings.TrimSpace(stringprivateKey)
+	block, _ := pem.Decode(privateKey)
 	if block == nil {
 		return nil, fmt.Errorf("checkPrivateKey: unable to decode Private Key")
 	}
+	// Make sure private key is RSA
 	key, err := x509.ParsePKCS1PrivateKey(block.Bytes)
 	if err != nil {
 		return nil, fmt.Errorf("checkPrivateKey: %v", err)
