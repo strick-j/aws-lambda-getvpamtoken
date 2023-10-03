@@ -1,10 +1,13 @@
 # aws-lambda-getvpamtoken
 Lambda function that allows programatic retrieval of jwt creation to access CyberArk Vendor PAM or CyberArk Secure Web Sessions API.
 
+## About
+This repo will deploy a lambda function that utilizes a Private Key stored in AWS Secrets Manager and environment variables provided in the samconfig.toml file to generate a serviceaccount jwt which can be utilzed to request an access token for interaction with the CyberArk Secure Web Sessions or Vendor Privileged Access Management APIs. Two primary reosources are created in AWS, a lambda function which generates the jwt, and an API Gateway which can be utilized to retrieve the jwt.
+
 ## Utilization
 1. Copy the repo:
 ```
-git clone https://
+git clone https://github.com/strick-j/aws-lambda-getvpamtoken.git
 ```
 2. Modify the samlconfig.toml file. Specifically update the parameter_overrides line. An example valid entry is below. Note that the Key Value Pairs are seperated by a space:
 ```
@@ -26,4 +29,14 @@ chmod +x *.sh
 ## Requirements
 1. Prior to using the scripts you should have already installed and configured the your AWS CLI and AWS SAM CLI
 2. Prior to using the scripts you should have already installed GO
+3. The Lambda function expects the RSA Private Key to be stored in secrets manager as a base64 encoded object. Additionally, the following format for the secret should be used (this format is the same format utilized by CyberArk Secrets Hub):
+```
+{
+    "username":"example",
+    "address":"example.com",
+    "plaformid":"Example-Platform",
+    "password":"<base64 encoded RSA Private Key e.g. LS2CRuD........woeWG==>",
+    "comment":"Example Comment"
+}
+```
 
