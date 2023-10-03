@@ -22,3 +22,6 @@ go.work
 
 # mac file
 .DS_Store
+
+# SAM TOML
+privatesamconfig.toml

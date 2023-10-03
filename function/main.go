@@ -4,6 +4,8 @@ import (
 	"context"
 	"crypto/rsa"
 	"crypto/x509"
+	"encoding/base64"
+	"encoding/json"
 	"encoding/pem"
 	"fmt"
 	"log"
@@ -16,14 +18,41 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	runtime "github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-lambda-go/lambdacontext"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/lambda"
+	"github.com/aws/aws-sdk-go/service/secretsmanager"
+	"github.com/aws/aws-sdk-go/service/secretsmanager/secretsmanageriface"
 	"github.com/golang-jwt/jwt"
 )
 
-var client = lambda.New(session.New())
+var (
+	conf *Config
+	err  error
+)
+
+var getKey = checkPrivateKey
+
+type Config struct {
+	SecretsManager secretsmanageriface.SecretsManagerAPI
+}
+
+func InitializeConfig() (*Config, error) {
+	sess, err := session.NewSession(&aws.Config{
+		Region: aws.String(os.Getenv("AWS_REGION"))},
+	)
+	if err != nil {
+		return &Config{}, fmt.Errorf("unable to create session to aws: %v", err)
+	}
+	return &Config{
+		SecretsManager: secretsmanager.New(sess),
+	}, nil
+}
 
 func init() {
+	conf, err = InitializeConfig()
+	if err != nil {
+		log.Fatalf("Unable to initialize config: %v", err)
+	}
 	rand.New(rand.NewSource(time.Now().UnixNano()))
 }
 
@@ -99,16 +128,48 @@ func checkRegion() (*string, error) {
 
 // Checks Private Kay and validates it is the correct type
 func checkPrivateKey() (*rsa.PrivateKey, error) {
-	privateKey := os.Getenv("CYBR_KEY")
+	// Create struct to hold private key
+	var secretData struct {
+		Address    string `json:"address"`
+		Username   string `json:"username"`
+		Platformid string `json:"platformid"`
+		Password   string `json:"password"`
+		Comment    string `json:"comment"`
+	}
+	// Get private key from Secrets Manager
+	result, err := conf.SecretsManager.GetSecretValue(&secretsmanager.GetSecretValueInput{
+		SecretId:     aws.String(os.Getenv("CYBR_KEY")),
+		VersionStage: aws.String("AWSCURRENT"),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("checkPrivateKey: %v", err)
+	}
+	var secretString string
+	if result != nil {
+		secretString = *result.SecretString
+	}
+	// Convert private key to string
+	err = json.Unmarshal([]byte(secretString), &secretData)
+	if err != nil {
+		return nil, fmt.Errorf("checkPrivateKey: %v", err)
+	}
+	// Decode private key
+	privateKey, err := base64.StdEncoding.DecodeString(secretData.Password)
+	if err != nil {
+		return nil, fmt.Errorf("checkPrivateKey: %v", err)
+	}
+	// Make sure private key is not empty
 	if len(privateKey) == 0 {
-		err := fmt.Errorf("checkPrivateKey: no region set in environment variables")
+		err := fmt.Errorf("checkPrivateKey: no Private Key set in environment variables")
 		return nil, err
 	}
-	pemString := strings.TrimSpace(privateKey)
+	pemString := strings.TrimSpace(string(privateKey))
+	// Make sure private key is PEM encoded
 	block, _ := pem.Decode([]byte(pemString))
 	if block == nil {
-		return nil, fmt.Errorf("checkPrivateKey: unable to decode Private Key")
+		return nil, fmt.Errorf("checkPrivateKey: unable to decode Private Key, Private Key: %v", pemString)
 	}
+	// Make sure private key is RSA
 	key, err := x509.ParsePKCS1PrivateKey(block.Bytes)
 	if err != nil {
 		return nil, fmt.Errorf("checkPrivateKey: %v", err)
@@ -133,7 +194,7 @@ func callLambda() (*string, error) {
 		return nil, err
 	}
 	// Validate Private Key
-	key, err := checkPrivateKey()
+	key, err := getKey()
 	if err != nil {
 		return nil, err
 	}
@@ -158,7 +219,6 @@ func callLambda() (*string, error) {
 }
 
 func handleRequest(ctx context.Context, event events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	// event
 	var ApiResponse events.APIGatewayProxyResponse
 	// environment variables
 	log.Printf("REGION: %s", os.Getenv("AWS_REGION"))

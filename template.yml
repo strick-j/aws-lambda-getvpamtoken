@@ -1,14 +1,34 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: 'AWS::Serverless-2016-10-31'
 Description: An AWS Lambda application that creates a jwt for CyberArk Vendor PAM or CyberArk Secure Web Sessions.
+Parameters:
+  CybrRegion:
+    Type: String
+    Description: The region where the CyberArk Remote Access Serivce is hosted
+    Default: Placeholder
+  CybrTenantId:
+    Type: String
+    Description: The tenant id of the CyberArk Remote Access Service
+    Default: Placeholder
+  CybrServiceAccountId:
+    Type: String
+    Description: The service account id of the CyberArk Remote Access Service
+    Default: Placeholder
+  CybrKey:
+    Type: String
+    Description: The ARN of the secret containing the CyberArk Remote Access Service key
+    Default: Placeholder
+
 Resources:
   CybrTokenGateway:
     Type: AWS::Serverless::Api
     Properties:
       Name: NE-ISPSS-TOKEN-GATEWAY
       StageName: Staging
+      Auth:
+        ApiKeyRequired: false
 
-  CyrbTokenFunction:
+  CybrTokenFunction:
     Type: AWS::Serverless::Function
     Properties:
       Handler: main
@@ -20,7 +40,15 @@ Resources:
       Policies:
         - AWSLambdaBasicExecutionRole
         - AWSLambda_ReadOnlyAccess
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Ref CybrKey
       Tracing: Active
+      Environment:
+        Variables:
+          CYBR_REGION: !Ref CybrRegion
+          CYBR_TENANT_ID: !Ref CybrTenantId
+          CYBR_SERVICE_ACCOUNT_ID: !Ref CybrServiceAccountId
+          CYBR_KEY: !Ref CybrKey
       Events:
         HttpRequest:
           Type: Api
@@ -28,16 +56,13 @@ Resources:
             RestApiId: !Ref CybrTokenGateway
             Path: /token
             Method: GET
-            Auth:
-              ApiFunctionAuth:
-                ApiKeyRequired: false
 
 Outputs:
   CybrTokenGateway:
-    Description: 'API Gateway endpoint URL for Staging stage for Cybr Token Function'
-    Value: !Sub 'https://${CybrTokenGateway}.execute-api.${AWS::Region}.amazonaws.com/Staging/token/'
+    Description: API Gateway endpoint URL for Staging stage for Cybr Token Function
+    Value: !Sub "https://${CybrTokenGateway}.execute-api.${AWS::Region}.amazonaws.com/Staging/token/"
   CybrTokenGatewayRestApiId:
-    Description: 'API Gateway ARN for Basic AWS API Gateway'
+    Description: API Gateway ARN for Basic AWS API Gateway
     Value: !Ref CybrTokenGateway
     Export:
       Name: CybrTokenGateway-RestApiId
